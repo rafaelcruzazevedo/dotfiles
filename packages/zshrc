@@ -1,0 +1,92 @@
+# Zinit startup.
+ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+source ${ZINIT_HOME}/zinit.zsh
+autoload -Uz _zinit
+(( ${+_comps} )) && _comps[zinit]=_zinit
+
+# Source local zsh configs
+if [[ -s "${HOME}/.zshrc.local" ]]; then
+  source "${HOME}/.zshrc.local"
+fi
+
+# Setup extra paths
+export PATH=$PATH:$HOME/Library/Python/3.7/bin
+
+# Android
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+
+# Secrets
+export DIGITAL_OCEAN_TOKEN=
+export GITHUB_TOKEN=
+export NPM_TOKEN=
+
+# fasd
+eval "$(fasd --init auto)"
+alias z='fasd_cd -d'
+
+#  # Theme
+zinit ice pick"async.zsh" src"pure.zsh"
+zinit light "sindresorhus/pure"
+
+#  # Modules
+zinit ice wait"0" lucid multisrc"shell/{completion,key-bindings}.zsh"
+zinit light "junegunn/fzf"
+
+zinit ice wait"0" lucid atload"_zsh_autosuggest_start"
+zinit light "zsh-users/zsh-autosuggestions"
+
+zinit ice wait"0" lucid blockf
+zinit light "zsh-users/zsh-completions"
+
+zinit ice wait"0" lucid atinit"zpcompinit; zpcdreplay"
+zinit light "zdharma/fast-syntax-highlighting"
+
+zinit ice wait"0" lucid src"autopair.zsh"
+zinit light "hlissner/zsh-autopair"
+
+zinit ice wait"0" lucid
+zinit light 'djui/alias-tips'
+
+zinit ice wait"0" lucid
+zinit light 'arzzen/calc.plugin.zsh'
+
+zinit ice wait"0" lucid
+zinit light 'djui/alias-tips'
+
+zinit ice wait lucid as'command' from'gh-r' mv'bat* -> bat' pick'bat/bat'
+zinit light 'sharkdp/bat'
+
+#  # Snippets
+zinit snippet PZT::modules/fasd
+
+zinit ice wait"0" lucid
+zinit snippet "OMZ::plugins/kubectl/kubectl.plugin.zsh"
+
+zinit ice wait"0" lucid
+zinit snippet "https://raw.githubusercontent.com/zimfw/completion/master/init.zsh"
+
+zinit ice wait"0" lucid
+zinit snippet "https://raw.githubusercontent.com/zimfw/input/master/init.zsh"
+
+zinit ice wait"0" lucid
+zinit snippet "https://raw.githubusercontent.com/zimfw/utility/master/init.zsh"
+
+zinit ice wait"0" lucid
+zinit snippet "https://raw.githubusercontent.com/thoughtbot/dotfiles/main/zsh/functions/g"
+
+zinit ice wait"0" lucid
+zinit snippet "$HOME/.zinit/hooks/npm-bin-hook.zsh"
+
+zinit snippet "OMZ::lib/history.zsh"
+
+zstyle :plugin:history-search-multi-word reset-prompt-protect 1
+zinit load zdharma/history-search-multi-word
+# pnpm
+export PNPM_HOME="/Users/abelsoares/Library/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end

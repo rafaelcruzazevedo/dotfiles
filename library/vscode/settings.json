@@ -1,0 +1,5 @@
+{
+  "editor.inlineSuggest.enabled": true,
+  "editor.rulers": [80, 120],
+  "editor.tabSize": 2
+}

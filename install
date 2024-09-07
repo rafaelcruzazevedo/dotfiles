@@ -1,0 +1,147 @@
+#!/bin/zsh
+
+# Install brew dependencies.
+install_brew() {
+  echo "Running brew..."
+  brew bundle --file=brew/Brewfile
+}
+
+# Install fasd.
+install_fasd() {
+  echo "Installing fasd..."
+
+  # Define the directory for cloning
+  local install_dir="$HOME/packages"
+  local fasd_dir="$install_dir/fasd"
+
+  # Check if fasd is already installed
+  if [ -d "$fasd_dir" ]; then
+    echo "fasd is already installed in $fasd_dir"
+    return
+  fi
+
+  # Create the directory if it doesn't exist
+  mkdir -p "$install_dir"
+
+  # Clone the repository
+  if git clone https://github.com/clvv/fasd.git "$fasd_dir"; then
+    cd "$fasd_dir" || exit
+    if PREFIX=$HOME make install; then
+      echo "fasd installed successfully!"
+    else
+      echo "Error during make install."
+      return 1
+    fi
+  else
+    echo "Error cloning fasd repository."
+    return 1
+  fi
+}
+
+# Install zinit.
+install_zinit() {
+  ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
+
+  if [[ ! -d ${ZINIT_HOME} ]]; then
+      echo '[zshrc] installing zinit ...'
+      mkdir -p "$(dirname $ZINIT_HOME)"
+      git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+  fi
+}
+
+# Setup rc files.
+symlink_dotfiles() {
+  echo "Symlinking dotfiles..."
+  rcup -fvd packages | nl -bn
+}
+
+# Install latest node.js.
+install_nodejs() {
+  if [ ! -x "$(which n 2> /dev/null)" ]; then
+    return 1;
+  fi
+
+  echo "Installing latest node.js..."
+  sudo mkdir -p /usr/local/n
+  sudo chown -R $(whoami) /usr/local/n
+  sudo chown -R $(whoami) /usr/local/bin /usr/local/lib /usr/local/include /usr/local/share
+  n latest
+}
+
+# Configure duti default file handlers.
+configure_duti() {
+  echo "Applying duti defaults..."
+
+  # VS Code
+  local vsCodeExtensions=(json md py sh yaml yml)
+  for extension in "${vsCodeExtensions[@]}"
+  do
+    duti -s com.microsoft.VSCode .${extension} all
+  done
+
+  # The Unarchiver
+  local unarchiverExtensions=(zip rar)
+  for extension in "${unarchiverExtensions[@]}"
+  do
+    duti -s com.macpaw.site.theunarchiver .${extension} all
+  done
+}
+
+# Configure iTerm defaults.
+configure_iterm() {
+  if [ -e ~/Library/Application\ Support/iTerm2/DynamicProfiles ]; then
+    echo "Skipping iTerm defaults..."
+    return 0;
+  fi
+
+  echo "Applying iTerm defaults..."
+  mkdir -p ~/Library/Application\ Support/iTerm2/DynamicProfiles
+  ln -sfv $(pwd)/library/iterm/profiles/default.json ~/Library/Application\ Support/iTerm2/DynamicProfiles
+  source library/iterm/defaults
+}
+
+# Configure macOS defaults.
+configure_macos() {
+  echo "Applying macOS defaults..."
+  source macos/defaults
+}
+
+# Configure VS Code.
+configure_vscode() {
+  echo "Installing VS Code extensions..."
+
+  local extensions=(
+    dbaeumer.vscode-eslint
+    formulahendry.auto-rename-tag
+    github.copilot
+    github.copilot-chat
+    github.vscode-github-actions
+    marioqueiros.camelcase
+    mgmcdermott.vscode-language-babel
+    mquandalle.graphql
+    mrmlnc.vscode-duplicate
+    natqe.reload
+    naumovs.color-highlight
+    styled-components.vscode-styled-components
+    tyriar.sort-lines
+    vscode-icons-team.vscode-icons
+  )
+
+  # Loop through each extension and install it.
+  for extension in "${extensions[@]}"; do
+    echo "Installing $extension..."
+    code --install-extension "$extension"
+  done
+
+  echo "VS Code successfully configured!"
+}
+
+install_brew
+install_fasd
+install_zinit
+symlink_dotfiles
+install_nodejs
+configure_duti
+configure_iterm
+configure_macos
+configure_vscode
