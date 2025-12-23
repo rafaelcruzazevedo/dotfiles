@@ -1,0 +1,162 @@
+[alias]
+    # === ADD ===
+    ap = add -p
+
+    # === BRANCH ===
+    br = branch -v
+    bra = branch -a
+    brd = branch -D
+    brm = branch -m
+
+    # === COMMIT ===
+    ci = commit
+    civ = commit -v
+    amend = commit --amend
+
+    # === CHECKOUT ===
+    co = checkout
+    cob = checkout -b
+    co-pr = !sh -c 'git fetch origin pull/$1/head:pr/$1 && git checkout pr/$1' -
+
+    # === CLEANUP ===
+    # Requires external tool: https://github.com/hartwork/git-delete-merged-branches
+    # Install: pip install git-delete-merged-branches
+    # cleanup = "!git-delete-merged-branches"
+
+    # === FETCH ===
+    fo = !git fetch origin
+    fu = !git fetch upstream
+    fro = !git fetch origin && git rebase origin/master
+    frod = !git fetch origin && git rebase origin/development
+    fru = !git fetch upstream && git rebase upstream/master
+
+    # === FIXUP ===
+    fixr = !sh -c 'git fixup $@ && git rebase -i $@~1' -
+    fixup = !sh -c 'git commit -m \"fixup! $(git log -1 --format='\\''%s'\\'' $@)\"' -
+    fixupn = !sh -c 'git commit -n -m \"fixup! $(git log -1 --format='\\''%s'\\'' $@)\"' -
+
+    # === LOG ===
+    lg = log --graph --pretty='format:%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+    lost = !"git fsck | awk '/dangling commit/ {print $3}' | git show --format='SHA1: %C(yellow)%h%Creset %f' --stdin | awk '/SHA1/ {sub(\"SHA1: \", \"\"); print}'"
+    lostplus = !"$HOME/.dotfiles/git/utils/git-commit-lost.sh"
+
+    # === PUSH ===
+    pof = "!git push --set-upstream origin \"$(git rev-parse --abbrev-ref HEAD)\" --force-with-lease --force-if-includes"
+    puf = push --force-with-lease
+
+    # === REBASE ===
+    rb = rebase
+    ri = rebase --interactive --autosquash
+    rim = rebase --interactive --autosquash origin/master
+    rba = rebase --abort
+    rbc = rebase --continue
+    rbskip = rebase --skip
+
+    # === SQUASH ===
+    squash = !sh -c 'git commit -m \"squash! $(git log -1 --format='\\''%s'\\'' $@)\"' -
+
+    # === STATUS ===
+    st = status
+    stp = !"$HOME/.dotfiles/git/utils/git-status-plus.sh"
+
+    # === STASH / SNAPSHOT ===
+    snapshot = !git stash push -m "snapshot: $(date)" && git stash apply "stash@{0}"
+    snapshots = !git stash list --grep snapshot
+
+    # === WIP ===
+    wip = !"git add -A; git ls-files --deleted -z | xargs -0 git rm; git commit -m \"wip\" --no-verify"
+    unwip = !"git log -n 1 | grep -q -c wip && git reset HEAD~1"
+
+    # === CONFLICT RESOLUTION ===
+    ours = "!f() { git checkout --ours $@ && git add $@; }; f"
+    theirs = "!f() { git checkout --theirs $@ && git add $@; }; f"
+
+    # === UTILS ===
+    recent-branches = !git for-each-ref --count=5 --sort=-committerdate refs/heads/ --format='%(refname:short)'
+    undo = reset --soft HEAD~1
+    showfiles = show --pretty=\"format:\" --name-only
+    tree = log --name-status
+
+    # === IGNORE (assume-unchanged) ===
+    ignore = update-index --assume-unchanged
+    unignore = update-index --no-assume-unchanged
+    ignored = !git ls-files -v | grep "^[[:lower:]]"
+
+    # === DIFF ===
+    ds = diff --staged
+    dom = diff origin/master
+    dn = diff --name-only
+    dstat = diff --stat
+
+    # === LOG EXTRAS ===
+    last = log -1 HEAD --stat
+    lf = log -1 --name-only
+    graph = log --graph --oneline --all
+    ll = log --oneline -20
+
+    # === COMMIT EXTRAS ===
+    cam = commit -am
+    empty = commit --allow-empty -m
+
+    # === SWITCH (Git 2.23+) ===
+    sw = switch
+    swc = switch -c
+
+    # === RESTORE (Git 2.23+) ===
+    rs = restore
+    rss = restore --staged
+
+    # === PULL ===
+    pl = pull
+    plr = pull --rebase
+
+    # === BRANCH EXTRAS ===
+    bclean = "!git branch --merged | grep -v '\\*\\|master\\|main' | xargs -n 1 git branch -d"
+    btrack = branch -vv
+    current = rev-parse --abbrev-ref HEAD
+
+    # === SYNC / UPDATE ===
+    up = !git fetch --all --prune
+
+    # === REMOTE ===
+    rv = remote -v
+    url = remote get-url origin
+
+    # === REBASE EXTRAS ===
+    ril = "!f() { git rebase -i HEAD~$1; }; f"
+    continue = !git add -A && git rebase --continue
+
+    # === WORKFLOW ===
+    cowip = "!f() { git add -A && git commit -m 'wip' --no-verify && git checkout \"$1\"; }; f"
+    back = "!git checkout - && git unwip"
+
+    # === CHERRY-PICK ===
+    # Note: Using 'cpk' instead of 'cp' to avoid conflict with unix cp command
+    cpk = cherry-pick
+    cpka = cherry-pick --abort
+    cpkc = cherry-pick --continue
+
+    # === UTILS EXTRAS ===
+    contributors = shortlog -sn
+    root = rev-parse --show-toplevel
+    count = rev-list --count HEAD
+    today = log --since=midnight --oneline
+    aliases = config --get-regexp alias
+
+    # === INCOMING / OUTGOING ===
+    in = log ..@{u} --oneline
+    out = log @{u}.. --oneline
+
+    # === BRANCH CLEANUP ===
+    rmbranch = "!f() { git branch -d $1 && git push origin --delete $1; }; f"
+
+    # === SWITCH TO DEFAULT ===
+    swm = "!git switch $(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')"
+
+    # === STASH EXTRAS ===
+    staa = !git stash apply && git stash drop
+    stashall = stash push --include-untracked
+
+    # === NUCLEAR OPTION ===
+    # WARNING: Destructive! Discards ALL uncommitted changes permanently
+    nope = "!echo 'WARNING: This will discard ALL uncommitted changes!' && read -p 'Are you sure? [y/N] ' confirm && [ \"$confirm\" = 'y' ] && git reset --hard && git clean -fd || echo 'Aborted'"

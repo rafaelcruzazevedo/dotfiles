@@ -1,2 +1,5 @@
 *.local
 *.zwc*
+
+# Claude
+.claude/settings.local.json
