@@ -1,0 +1,173 @@
+# Git Configuration
+# Aliases are in .gitaliases
+# User config is in .gitconfig.local (create this file with [user] section)
+
+[include]
+    path = ~/.gitaliases
+    path = ~/.gitconfig.local
+
+# Fallback user (override in ~/.gitconfig.local)
+# If user.name/email not set, git will prompt on first commit
+[user]
+    # Configure these in ~/.gitconfig.local:
+    # [user]
+    #   name = Your Name
+    #   email = your.email@example.com
+
+[init]
+    defaultBranch = master
+
+[apply]
+    whitespace = fix
+
+[branch]
+    autosetuprebase = always
+
+[branch "master"]
+    remote = origin
+    merge = refs/heads/master
+
+[pull]
+    rebase = true
+
+[push]
+    default = current
+    autoSetupRemote = true
+
+[fetch]
+    prune = true
+
+[commit]
+    verbose = true
+
+[help]
+    autocorrect = prompt
+
+[color]
+    diff = auto
+    interactive = auto
+    status = auto
+    ui = true
+
+[color "branch"]
+    current = yellow reverse
+    local = yellow
+    remote = green
+
+[color "diff"]
+    meta = 11
+    frag = magenta bold
+    old = red bold
+    new = green bold
+    func = 146 bold
+    commit = yellow bold
+    whitespace = red reverse
+    colorMoved = default
+
+[color "status"]
+    added = green
+    changed = yellow
+    untracked = cyan
+
+[core]
+    attributesfile = ~/.gitattributes
+    autocrlf = false
+    editor = vim
+    excludesfile = ~/.gitignore
+    quotepath = false
+    safecrlf = true
+    whitespace = cr-at-eol,space-before-tab,-indent-with-non-tab,trailing-space
+    # Requires: brew install git-delta (installed via Brewfile)
+    # To disable: git config --global core.pager less
+    pager = delta
+
+[diff]
+    renames = copies
+    tool = vimdiff
+    mnemonicprefix = true
+    algorithm = patience
+
+[difftool]
+    prompt = false
+
+[format]
+    pretty = %Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset
+
+[mergetool]
+    keepBackup = false
+
+[merge]
+    conflictstyle = diff3
+
+[rebase]
+    autosquash = true
+    autostash = true
+    stat = true
+
+[rerere]
+    enabled = 1
+    autoupdate = true
+
+[status]
+    showUntrackedFiles = all
+
+[tag]
+    sort = version:refname
+
+[log]
+    showGraftedCommits = true
+
+# Delta (diff pager)
+[interactive]
+    diffFilter = delta --color-only --features=interactive
+
+[color "diff-highlight"]
+    oldNormal = red bold
+    oldHighlight = red bold 52
+    newNormal = green bold
+    newHighlight = green bold 22
+
+[delta]
+    dark = true
+    features = decorations
+    light = false
+
+[delta "interactive"]
+    keep-plus-minus-markers = true
+
+[delta "decorations"]
+    dark = true
+    file-added-label = [+]
+    file-copied-label = [==]
+    file-decoration-style = "#3674f0" ul
+    file-modified-label = [*]
+    file-removed-label = [-]
+    file-renamed-label = [->]
+    file-style = "#3674f0" bold
+    hunk-header-style = omit
+    line-numbers = false
+    line-numbers-left-format = " {nm:>3} |"
+    line-numbers-left-style = "#333333"
+    line-numbers-minus-style = "#a43630"
+    line-numbers-plus-style = "#3b7d55"
+    line-numbers-right-format = " {np:>3} |"
+    line-numbers-right-style = "#333333"
+    inline-hint-style = syntax
+    minus-emph-style = "#fbdbda" bold "#a43630"
+    minus-non-emph-style = syntax auto
+    minus-style = auto "#2f0f0e"
+    plus-emph-style = "#f1fef6" bold "#3b7d55"
+    plus-non-emph-style = syntax auto
+    plus-style = syntax "#173222"
+    whitespace-error-style = "#FB4934" reverse
+    commit-decoration-style = normal box
+    commit-style = "#ffffff" bold
+    blame-code-style = syntax
+    blame-format = "{author:>18} ({commit:>8}) {timestamp:<13} "
+    blame-palette = "#000000" "#1d2021" "#282828" "#3c3836"
+    merge-conflict-begin-symbol = ^
+    merge-conflict-end-symbol = v
+    merge-conflict-ours-diff-header-decoration-style = ''
+    merge-conflict-ours-diff-header-style = "#FABD2F" bold
+    merge-conflict-theirs-diff-header-decoration-style = ''
+    merge-conflict-theirs-diff-header-style = "#FABD2F" bold overline

@@ -1,0 +1,59 @@
+# ============================================================================
+# .zshrc.local - Secrets & API Keys
+# ============================================================================
+# Copy to ~/.zshrc.local and fill your values
+# NOT committed to git
+# ============================================================================
+
+# === CLOUD PROVIDERS ===
+
+# AWS: Use SSO (recommended) or static keys
+# SSO Setup: aws configure sso (then browser auth)
+# Docs: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html
+# After SSO setup, set your profile:
+export AWS_PROFILE=""  # e.g., "dev-admin" or "MyRole-123456789012"
+# Optional: Static keys (NOT recommended for corporate environments)
+# export AWS_ACCESS_KEY_ID=""
+# export AWS_SECRET_ACCESS_KEY=""
+
+# DigitalOcean: https://docs.digitalocean.com/reference/api/create-personal-access-token/
+export DIGITALOCEAN_ACCESS_TOKEN=""
+
+# === AI SERVICES ===
+# Claude: https://console.anthropic.com/settings/keys
+export ANTHROPIC_API_KEY=""
+
+# Gemini: https://aistudio.google.com/apikey
+export GEMINI_API_KEY=""
+
+# OpenAI: https://platform.openai.com/api-keys
+export OPENAI_API_KEY=""
+
+# === DEVELOPMENT ===
+# GitHub PAT: https://github.com/settings/tokens (needs repo, read:org)
+export GITHUB_PERSONAL_ACCESS_TOKEN=""
+
+# NPM: https://www.npmjs.com/settings/~/tokens
+export NPM_TOKEN=""
+
+# === MONITORING ===
+# Sentry: https://docs.sentry.io/product/cli/configuration/
+export SENTRY_AUTH_TOKEN=""
+export SENTRY_ORG=""
+
+# === PRODUCTIVITY ===
+# Notion: https://www.notion.so/my-integrations
+export NOTION_API_KEY=""
+
+# === BROWSER-BASED AUTH (no env vars needed) ===
+# These tools authenticate via browser, no secrets to store here:
+# - gh: gh auth login
+# - acli: acli login
+# - docker: docker login
+# - 1password-cli: op signin
+# - aws sso: aws sso login --profile $AWS_PROFILE
+
+# === OPTIONAL: 1Password CLI ===
+# If using 1Password CLI, you can replace above with op:// references:
+# export ANTHROPIC_API_KEY="op://Personal/Anthropic/api-key"
+# Then run commands with: op run -- your-command
