@@ -10,6 +10,32 @@
 - **AI tools** - Claude Code, Gemini CLI with shared MCP servers
 - **DevOps** - AWS SSO, Terraform, kubectl, Docker, Atlassian CLI
 
+## Prerequisites
+
+Before running bootstrap, install these manually:
+
+### 1. Xcode Command Line Tools
+
+```bash
+xcode-select --install
+```
+
+Complete the installation dialog when prompted.
+
+### 2. Homebrew
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+**Important**: Restart your terminal after installing Homebrew to ensure the PATH is updated.
+
+### Why Manual Prerequisites?
+
+- **Reliability**: Homebrew's PATH setup requires a shell restart to work correctly
+- **Control**: You know exactly what's being installed before running bootstrap
+- **Error visibility**: Separate installation makes troubleshooting easier
+
 ## What's Installed
 
 ### Brew Packages

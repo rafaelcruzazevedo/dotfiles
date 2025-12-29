@@ -1,49 +1,42 @@
 #!/bin/zsh
+set -e
 
 # ============================================================================
 # DOTFILES INSTALLATION FUNCTIONS
 # ============================================================================
 
 # ============================================================================
-# PREREQUISITES (Auto-install)
+# PREREQUISITES
 # ============================================================================
 
-install_xcode_clt() {
-  if xcode-select -p &> /dev/null; then
-    print_success "Xcode CLT already installed"
-    return 0
+check_prerequisites() {
+  print_step "Checking prerequisites..."
+  local missing=()
+
+  # Xcode CLT
+  if ! xcode-select -p &> /dev/null; then
+    missing+=("Xcode Command Line Tools")
   fi
 
-  print_step "Installing Xcode Command Line Tools..."
-  xcode-select --install 2>/dev/null || true
+  # Homebrew
+  if ! command -v brew &> /dev/null; then
+    missing+=("Homebrew")
+  fi
 
-  echo "Waiting for Xcode CLT installation..."
-  echo "Please complete the installation dialog, then press Enter."
-  read -r
-
-  if xcode-select -p &> /dev/null; then
-    print_success "Xcode CLT installed"
-  else
-    print_error "Xcode CLT installation failed"
+  if [ ${#missing[@]} -gt 0 ]; then
+    print_error "Missing prerequisites:"
+    for dep in "${missing[@]}"; do
+      echo "  - $dep"
+    done
+    echo ""
+    echo "Install them first:"
+    echo "  1. xcode-select --install"
+    echo "  2. /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+    echo "  3. Restart terminal, then run this command again"
     exit 1
   fi
-}
 
-install_homebrew() {
-  if command -v brew &> /dev/null; then
-    print_success "Homebrew already installed"
-    return 0
-  fi
-
-  print_step "Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-  # Add to PATH for this session (Apple Silicon)
-  if [[ -f /opt/homebrew/bin/brew ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-  fi
-
-  print_success "Homebrew installed"
+  print_success "Prerequisites verified (Xcode CLT, Homebrew)"
 }
 
 install_gum() {
@@ -52,7 +45,37 @@ install_gum() {
   fi
 
   echo "Installing gum for better UI..."
-  brew install gum 2>/dev/null
+  brew install gum 2>/dev/null || true
+}
+
+# ============================================================================
+# SUDO KEEP-ALIVE
+# ============================================================================
+
+acquire_sudo() {
+  print_step "Acquiring administrator privileges..."
+  print_warning "Some packages require sudo. You'll be asked for your password once."
+
+  # Ask for password upfront
+  sudo -v
+
+  # Keep sudo alive in background until script finishes
+  (
+    while true; do
+      sudo -n true
+      sleep 60
+      kill -0 "$$" 2>/dev/null || exit
+    done
+  ) &
+  SUDO_KEEPALIVE_PID=$!
+
+  print_success "Administrator privileges acquired"
+}
+
+cleanup_sudo() {
+  if [ -n "$SUDO_KEEPALIVE_PID" ]; then
+    kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
+  fi
 }
 
 # ============================================================================
@@ -61,7 +84,22 @@ install_gum() {
 
 install_brew_packages() {
   print_step "Installing Homebrew packages..."
-  run_with_spinner "Installing from Brewfile..." brew bundle --file="$DOTFILES_DIR/Brewfile"
+
+  local log_file="/tmp/brew-bundle-$(date +%Y%m%d-%H%M%S).log"
+
+  # brew bundle returns non-zero if any package fails, but we want to continue
+  set +e
+  if [[ "$DRY_RUN" == "true" ]]; then
+    echo "[dry-run] Would run: brew bundle --file=$DOTFILES_DIR/Brewfile"
+  else
+    brew bundle --file="$DOTFILES_DIR/Brewfile" 2>&1 | tee "$log_file"
+    local bundle_status=${PIPESTATUS[0]}
+    if [ $bundle_status -ne 0 ]; then
+      print_warning "Some packages failed to install. Check: $log_file"
+    fi
+  fi
+  set -e
+
   print_success "Homebrew packages installed"
 }
 
@@ -85,9 +123,33 @@ install_shell_symlinks() {
     cp ~/.gitconfig ~/.gitconfig.local 2>/dev/null || true
   fi
   dry_ln "$DOTFILES_DIR/git/.gitconfig" ~/.gitconfig
+
+  # Backup .gitaliases if it exists and is not a symlink
+  if [ -f ~/.gitaliases ] && [ ! -L ~/.gitaliases ] && [[ "$DRY_RUN" != "true" ]]; then
+    cp ~/.gitaliases ~/.gitaliases.backup.$(date +%Y%m%d) 2>/dev/null || true
+    print_warning "Backed up existing .gitaliases"
+  fi
   dry_ln "$DOTFILES_DIR/git/.gitaliases" ~/.gitaliases
 
   print_success "Shell symlinks created"
+}
+
+create_projects_folder() {
+  print_step "Creating Projects folder..."
+
+  local projects_dir="$HOME/Projects"
+
+  if [ -d "$projects_dir" ]; then
+    print_success "Projects folder already exists: $projects_dir"
+    return 0
+  fi
+
+  if [[ "$DRY_RUN" == "true" ]]; then
+    echo "[dry-run] Would create: $projects_dir"
+  else
+    mkdir -p "$projects_dir"
+    print_success "Created: $projects_dir"
+  fi
 }
 
 configure_git_user() {
@@ -145,6 +207,13 @@ configure_starship() {
   if [[ "$DRY_RUN" != "true" ]]; then
     mkdir -p ~/.config
   fi
+
+  # Backup starship.toml if it exists and is not a symlink
+  if [ -f ~/.config/starship.toml ] && [ ! -L ~/.config/starship.toml ] && [[ "$DRY_RUN" != "true" ]]; then
+    cp ~/.config/starship.toml ~/.config/starship.toml.backup.$(date +%Y%m%d) 2>/dev/null || true
+    print_warning "Backed up existing starship.toml"
+  fi
+
   dry_ln "$DOTFILES_DIR/shell/starship.toml" ~/.config/starship.toml
   print_success "Starship configured"
 }
@@ -191,6 +260,8 @@ configure_iterm_shell_integration() {
 
 configure_macos() {
   print_step "Applying macOS defaults..."
+  print_warning "This may ask for your password (sudo required for accessibility settings)"
+
   if [[ "$DRY_RUN" != "true" ]]; then
     source "$DOTFILES_DIR/macos/defaults"
   else
@@ -214,10 +285,17 @@ configure_cursor() {
   # Install extensions if Cursor CLI is available
   if command -v cursor &> /dev/null && [[ "$DRY_RUN" != "true" ]]; then
     print_step "Installing Cursor extensions..."
+    local failed_extensions=()
     while IFS= read -r extension || [[ -n "$extension" ]]; do
       [[ -z "$extension" ]] && continue
-      cursor --install-extension "$extension" 2>/dev/null || true
+      if ! cursor --install-extension "$extension" 2>/dev/null; then
+        failed_extensions+=("$extension")
+      fi
     done < "$DOTFILES_DIR/apps/cursor/extensions.txt"
+
+    if [ ${#failed_extensions[@]} -gt 0 ]; then
+      print_warning "Failed to install extensions: ${failed_extensions[*]}"
+    fi
   elif [[ "$DRY_RUN" == "true" ]]; then
     echo "[dry-run] Would install extensions from apps/cursor/extensions.txt"
   else
@@ -241,10 +319,17 @@ configure_vscode() {
   # Install extensions if VSCode CLI is available
   if command -v code &> /dev/null && [[ "$DRY_RUN" != "true" ]]; then
     print_step "Installing VSCode extensions..."
+    local failed_extensions=()
     while IFS= read -r extension || [[ -n "$extension" ]]; do
       [[ -z "$extension" ]] && continue
-      code --install-extension "$extension" 2>/dev/null || true
+      if ! code --install-extension "$extension" 2>/dev/null; then
+        failed_extensions+=("$extension")
+      fi
     done < "$DOTFILES_DIR/apps/cursor/extensions.txt"
+
+    if [ ${#failed_extensions[@]} -gt 0 ]; then
+      print_warning "Failed to install extensions: ${failed_extensions[*]}"
+    fi
   elif [[ "$DRY_RUN" == "true" ]]; then
     echo "[dry-run] Would install extensions from apps/cursor/extensions.txt"
   else
@@ -369,6 +454,11 @@ configure_ai_tools() {
 # ============================================================================
 
 do_install() {
+  # Mark installation as in progress (for resume detection)
+  if [[ "$DRY_RUN" != "true" ]]; then
+    touch "$DOTFILES_DIR/.installing"
+  fi
+
   # Show mode
   if [[ "$DRY_RUN" == "true" ]]; then
     echo ""
@@ -379,20 +469,26 @@ do_install() {
 
   print_header "Dotfiles Installer" "212"
 
-  # Prerequisites (auto-install) - skip if requested
+  # Prerequisites - skip if requested (already checked in bootstrap)
   if [[ "$SKIP_PREREQUISITES" != "true" ]]; then
-    install_xcode_clt
-    install_homebrew
+    check_prerequisites
     install_gum
     # Now with nice UI
     print_header "Dotfiles Installer" "212"
   else
-    print_warning "Skipping prerequisites (--skip-prerequisites)"
+    print_warning "Skipping prerequisites check"
+  fi
+
+  # Acquire sudo once for all packages that need it
+  if [[ "$DRY_RUN" != "true" ]]; then
+    acquire_sudo
+    trap cleanup_sudo EXIT
   fi
 
   # Sequential installation (no choices needed)
   install_brew_packages
   install_shell_symlinks
+  create_projects_folder
   configure_git_user
   configure_starship
   configure_fzf
@@ -416,7 +512,10 @@ do_install() {
   echo "  1. Add secrets to ~/.zshrc.local:"
   echo "     - GITHUB_PERSONAL_ACCESS_TOKEN"
   echo "     - FIGMA_API_KEY"
-  echo "  2. Restart terminal or run: source ~/.zshrc"
+  echo "  2. Restart terminal (or run: source ~/.zshrc) to load new configs"
+
+  # Mark installation as complete
+  rm -f "$DOTFILES_DIR/.installing"
 }
 
 # ============================================================================

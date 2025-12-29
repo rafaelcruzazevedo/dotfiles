@@ -4,6 +4,24 @@ Personal macOS development environment.
 
 ## Quick Start
 
+### Prerequisites
+
+Install these **before** running bootstrap:
+
+1. **Xcode Command Line Tools**
+
+   ```bash
+   xcode-select --install
+   ```
+
+2. **Homebrew**
+
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+
+3. **Restart your terminal** (only needed if you just installed Homebrew)
+
 ### New Machine
 
 ```bash

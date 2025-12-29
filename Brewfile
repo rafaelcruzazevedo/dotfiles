@@ -1,7 +1,7 @@
 # Taps
-tap "homebrew/bundle"
 tap "hashicorp/tap"
 tap "atlassian/homebrew-acli"
+tap "oven-sh/bun"
 
 # === CORE ===
 brew "git"
@@ -24,7 +24,7 @@ brew "gum"
 
 # === LANGUAGES & RUNTIMES ===
 brew "volta"
-brew "bun"
+brew "oven-sh/bun/bun"
 brew "python"
 brew "uv"
 cask "zulu@17"
@@ -74,7 +74,6 @@ cask "iterm2"
 cask "1password"
 cask "1password-cli"
 cask "obsidian"
-cask "notion"
 cask "slack"
 cask "spotify"
 cask "meetingbar"
@@ -82,9 +81,9 @@ cask "clockify"
 cask "activitywatch"
 cask "kap"
 cask "figma"
-cask "nordpass"
+cask "nordvpn"
 cask "whatsapp"
-cask "zoom"
+cask "loom"
 
 # === AI TOOLS ===
 cask "claude-code"
@@ -93,7 +92,7 @@ brew "gemini-cli"
 
 # === DATABASE ===
 cask "postico"
-brew "postgresql"
+brew "postgresql@16"
 cask "requestly"
 cask "postman"
 cask "postman-agent"

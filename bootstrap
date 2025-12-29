@@ -32,7 +32,7 @@ has_gum() { command -v gum &> /dev/null; }
 
 print_step() {
   if has_gum; then
-    gum style --foreground 39 "-> $1"
+    gum style --foreground 39 -- "-> $1"
   else
     echo -e "${BLUE}->${NC} $1"
   fi
@@ -58,41 +58,34 @@ print_error() {
 # PREREQUISITES
 # ============================================================================
 
-install_xcode_clt() {
-  if xcode-select -p &> /dev/null; then
-    print_success "Xcode CLT already installed"
-    return 0
+check_prerequisites() {
+  print_step "Checking prerequisites..."
+  local missing=()
+
+  # Xcode CLT
+  if ! xcode-select -p &> /dev/null; then
+    missing+=("Xcode Command Line Tools")
   fi
 
-  print_step "Installing Xcode Command Line Tools..."
-  xcode-select --install 2>/dev/null || true
+  # Homebrew
+  if ! command -v brew &> /dev/null; then
+    missing+=("Homebrew")
+  fi
 
-  echo "Please complete the installation dialog, then press Enter."
-  read -r
-
-  if xcode-select -p &> /dev/null; then
-    print_success "Xcode CLT installed"
-  else
-    print_error "Xcode CLT installation failed"
+  if [ ${#missing[@]} -gt 0 ]; then
+    print_error "Missing prerequisites:"
+    for dep in "${missing[@]}"; do
+      echo "  - $dep"
+    done
+    echo ""
+    echo "Install them first:"
+    echo "  1. xcode-select --install"
+    echo "  2. /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+    echo "  3. Restart terminal, then run bootstrap again"
     exit 1
   fi
-}
 
-install_homebrew() {
-  if command -v brew &> /dev/null; then
-    print_success "Homebrew already installed"
-    return 0
-  fi
-
-  print_step "Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-  # Add to PATH for this session (Apple Silicon)
-  if [[ -f /opt/homebrew/bin/brew ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-  fi
-
-  print_success "Homebrew installed"
+  print_success "Prerequisites verified (Xcode CLT, Homebrew)"
 }
 
 install_gum() {
@@ -243,8 +236,7 @@ do_bootstrap() {
   fi
   echo ""
 
-  install_xcode_clt
-  install_homebrew
+  check_prerequisites
   install_gum
   setup_ssh
   clone_dotfiles
@@ -263,10 +255,19 @@ do_bootstrap() {
 main() {
   # Check if already installed
   if [ -d "$DOTFILES_DIR" ] && [ -f "$DOTFILES_DIR/lib/main.sh" ]; then
-    # Already installed - delegate to dotfiles_main
     cd "$DOTFILES_DIR"
     source "$DOTFILES_DIR/lib/main.sh" || { print_error "Failed to source lib/main.sh"; exit 1; }
-    dotfiles_main "$@"
+
+    # Check for interrupted installation
+    if [ -f "$DOTFILES_DIR/.installing" ]; then
+      print_warning "Previous installation was interrupted"
+      print_step "Resuming installation..."
+      SKIP_PREREQUISITES=true
+      do_install
+    else
+      # Already installed - delegate to dotfiles_main
+      dotfiles_main "$@"
+    fi
   else
     # Fresh install - run bootstrap
     do_bootstrap
