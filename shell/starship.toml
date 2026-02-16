@@ -34,6 +34,9 @@ $line_break$character"""
 
 palette = 'gruvbox_dark'
 
+# Wait 30ms for starship to check files
+scan_timeout = 30
+
 [palettes.gruvbox_dark]
 color_fg0 = '#fbf1c7'
 color_bg1 = '#3c3836'
@@ -45,9 +48,6 @@ color_orange = '#d65d0e'
 color_purple = '#b16286'
 color_red = '#cc241d'
 color_yellow = '#d79921'
-
-# Wait 30ms for starship to check files
-scan_timeout = 30
 
 # ============================================================================
 # CORE MODULES
