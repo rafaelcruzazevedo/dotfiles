@@ -18,11 +18,19 @@ check_prerequisites() {
   sudo apt-get install -y build-essential procps curl file git zsh chromium-browser
 
   # Homebrew
-  if ! command -v brew &>/dev/null; then
+  if ! command -v brew &>/dev/null && [ ! -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
     print_step "Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    if [ "$(id -u)" -eq 0 ]; then
+      # Homebrew refuses to run as root — use a dedicated user
+      useradd -m -s /bin/bash linuxbrew 2>/dev/null || true
+      curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh -o /tmp/homebrew-install.sh
+      sudo -u linuxbrew env NONINTERACTIVE=1 /bin/bash /tmp/homebrew-install.sh
+      rm -f /tmp/homebrew-install.sh
+    else
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
   fi
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
   print_success "Prerequisites verified (build-essential, Homebrew)"
 }
@@ -33,7 +41,7 @@ install_gum() {
   fi
 
   echo "Installing gum for better UI..."
-  brew install gum 2>/dev/null || true
+  run_brew install gum 2>/dev/null || true
 }
 
 # ============================================================================
@@ -74,19 +82,29 @@ install_brew_packages() {
   print_step "Installing Homebrew packages..."
 
   local log_file="/tmp/brew-bundle-$(date +%Y%m%d-%H%M%S).log"
+  local brewfile="$DOTFILES_DIR/Brewfile"
+
+  # When running as root, linuxbrew user can't read files in /root/
+  if [ "$(id -u)" -eq 0 ]; then
+    cp "$brewfile" /tmp/dotfiles-Brewfile
+    chmod 644 /tmp/dotfiles-Brewfile
+    brewfile=/tmp/dotfiles-Brewfile
+  fi
 
   # brew bundle returns non-zero if any package fails, but we want to continue
   set +e
   if [[ "$DRY_RUN" == "true" ]]; then
     echo "[dry-run] Would run: brew bundle --file=$DOTFILES_DIR/Brewfile"
   else
-    brew bundle --file="$DOTFILES_DIR/Brewfile" 2>&1 | tee "$log_file"
+    run_brew bundle --file="$brewfile" 2>&1 | tee "$log_file"
     local bundle_status=${PIPESTATUS[0]}
     if [ $bundle_status -ne 0 ]; then
       print_warning "Some packages failed to install. Check: $log_file"
     fi
   fi
   set -e
+
+  rm -f /tmp/dotfiles-Brewfile
 
   print_success "Homebrew packages installed"
 }
@@ -209,7 +227,7 @@ configure_starship() {
 configure_fzf() {
   print_step "Configuring fzf..."
   if command -v fzf &> /dev/null && [[ "$DRY_RUN" != "true" ]]; then
-    $(brew --prefix)/opt/fzf/install --key-bindings --completion --no-update-rc --no-bash --no-fish 2>/dev/null || true
+    "${HOMEBREW_PREFIX:-/home/linuxbrew/.linuxbrew}/opt/fzf/install" --key-bindings --completion --no-update-rc --no-bash --no-fish 2>/dev/null || true
   fi
   print_success "fzf configured"
 }
