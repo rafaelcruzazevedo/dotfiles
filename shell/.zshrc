@@ -22,7 +22,7 @@ fi
 
 export ZPLUG_HOME="$(brew --prefix)/opt/zplug"
 if [ -f "$ZPLUG_HOME/init.zsh" ]; then
-  source "$ZPLUG_HOME/init.zsh"
+  source "$ZPLUG_HOME/init.zsh" 2>/dev/null
 else
   echo "Warning: zplug not installed. Run: brew install zplug"
 fi
