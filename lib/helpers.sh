@@ -79,7 +79,7 @@ print_error() {
 # Homebrew refuses to run as root — delegate to linuxbrew user
 run_brew() {
   if [ "$(id -u)" -eq 0 ]; then
-    sudo -u linuxbrew /home/linuxbrew/.linuxbrew/bin/brew "$@"
+    (cd /tmp && sudo -u linuxbrew /home/linuxbrew/.linuxbrew/bin/brew "$@")
   else
     brew "$@"
   fi
