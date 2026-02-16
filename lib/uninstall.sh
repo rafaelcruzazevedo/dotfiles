@@ -31,92 +31,6 @@ remove_config_symlinks() {
   fi
 }
 
-remove_iterm_config() {
-  print_step "Removing iTerm2 configuration..."
-
-  local iterm_profile=~/Library/Application\ Support/iTerm2/DynamicProfiles/default.json
-  if [ -L "$iterm_profile" ] || [ -f "$iterm_profile" ]; then
-    rm -f "$iterm_profile"
-    print_success "Removed iTerm2 dynamic profile"
-  fi
-}
-
-remove_editor_config() {
-  print_step "Removing editor configuration..."
-
-  # Cursor
-  local cursor_dir=~/Library/Application\ Support/Cursor/User
-  for file in settings.json keybindings.json; do
-    if [ -L "$cursor_dir/$file" ]; then
-      rm -f "$cursor_dir/$file"
-      print_success "Removed Cursor $file"
-    fi
-  done
-
-  # VSCode
-  local vscode_dir=~/Library/Application\ Support/Code/User
-  if [ -L "$vscode_dir/settings.json" ]; then
-    rm -f "$vscode_dir/settings.json"
-    print_success "Removed VSCode settings.json"
-  fi
-}
-
-remove_ai_config() {
-  print_step "Removing AI CLI configuration..."
-
-  # Claude Code
-  if [ -L ~/.claude/settings.json ]; then
-    rm -f ~/.claude/settings.json
-    print_success "Removed Claude Code settings"
-  fi
-
-  if [ -L ~/.claude/CLAUDE.md ]; then
-    rm -f ~/.claude/CLAUDE.md
-    print_success "Removed Claude Code memory"
-  fi
-
-  # Claude Code Rules
-  if [ -d ~/.claude/rules ]; then
-    for rule in ~/.claude/rules/*.md; do
-      if [ -L "$rule" ]; then
-        rm -f "$rule"
-      fi
-    done
-    rmdir ~/.claude/rules 2>/dev/null || true
-    print_success "Removed Claude Code rules"
-  fi
-
-  # Claude Code Skills
-  if [ -d ~/.claude/skills ]; then
-    for skill in ~/.claude/skills/*/; do
-      if [ -L "${skill%/}" ]; then
-        rm -f "${skill%/}"
-      fi
-    done
-    rmdir ~/.claude/skills 2>/dev/null || true
-    print_success "Removed Claude Code skills"
-  fi
-
-  # Cursor MCP
-  if [ -L ~/.cursor/mcp.json ]; then
-    rm -f ~/.cursor/mcp.json
-    print_success "Removed Cursor MCP config"
-  fi
-
-  # Gemini CLI
-  if [ -L ~/.gemini/settings.json ]; then
-    rm -f ~/.gemini/settings.json
-    print_success "Removed Gemini CLI config"
-  fi
-
-  # Cleanup empty directories
-  for dir in ~/.claude ~/.cursor ~/.gemini; do
-    if [ -d "$dir" ] && [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
-      rmdir "$dir" 2>/dev/null && print_success "Removed empty $dir"
-    fi
-  done
-}
-
 restore_backups() {
   print_step "Restoring backups..."
 
@@ -188,9 +102,6 @@ do_uninstall() {
   echo ""
   remove_shell_symlinks
   remove_config_symlinks
-  remove_iterm_config
-  remove_editor_config
-  remove_ai_config
   restore_backups
   remove_dotfiles_dir
 

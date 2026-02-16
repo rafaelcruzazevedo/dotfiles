@@ -89,7 +89,7 @@ show_help() {
   echo ""
   echo "Options:"
   echo "  --dry-run               Show what would be done"
-  echo "  --skip-prerequisites    Skip Xcode/Homebrew/gum"
+  echo "  --skip-prerequisites    Skip build-essential/Homebrew/gum"
   echo ""
   echo "Examples:"
   echo "  ./bootstrap                      # Show menu"

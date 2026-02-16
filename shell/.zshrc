@@ -9,18 +9,18 @@ export LANG=en_US.UTF-8
 export DOTFILES_DIR="$HOME/.dotfiles"
 
 # ============================================================================
-# HOMEBREW (Apple Silicon)
+# HOMEBREW (Linux)
 # ============================================================================
 
-if [[ -f /opt/homebrew/bin/brew ]]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
+if [[ -f /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
 # ============================================================================
 # ZPLUG - Plugin Manager
 # ============================================================================
 
-export ZPLUG_HOME=/opt/homebrew/opt/zplug
+export ZPLUG_HOME="$(brew --prefix)/opt/zplug"
 if [ -f "$ZPLUG_HOME/init.zsh" ]; then
   source "$ZPLUG_HOME/init.zsh"
 else
@@ -86,21 +86,6 @@ eval "$(starship init zsh)"
 export VOLTA_HOME=$HOME/.volta
 export PATH=$VOLTA_HOME/bin:$PATH
 
-# Java (use system default if available)
-if /usr/libexec/java_home &>/dev/null; then
-  export JAVA_HOME=$(/usr/libexec/java_home)
-fi
-
-# Android
-export ANDROID_HOME=$HOME/Library/Android/sdk
-export PATH=$PATH:$ANDROID_HOME/emulator
-export PATH=$PATH:$ANDROID_HOME/platform-tools
-
-# Bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
-
 # ============================================================================
 # ALIASES
 # ============================================================================
@@ -137,14 +122,6 @@ setopt HIST_VERIFY            # Show command before executing from history
 setopt APPEND_HISTORY         # Append to history file, don't overwrite
 setopt EXTENDED_HISTORY       # Record timestamp in history
 setopt HIST_EXPIRE_DUPS_FIRST # Expire duplicates first when trimming
-
-# ============================================================================
-# iTerm2 SHELL INTEGRATION
-# ============================================================================
-
-# Provides: command navigation, directory history, file transfers
-# https://iterm2.com/shell_integration.html
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 # ============================================================================
 # LOCAL CONFIG & SECRETS

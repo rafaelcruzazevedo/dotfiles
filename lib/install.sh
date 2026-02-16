@@ -11,32 +11,20 @@ set -e
 
 check_prerequisites() {
   print_step "Checking prerequisites..."
-  local missing=()
 
-  # Xcode CLT
-  if ! xcode-select -p &> /dev/null; then
-    missing+=("Xcode Command Line Tools")
-  fi
+  # System dependencies (ref: docs.brew.sh/Homebrew-on-Linux)
+  print_step "Installing system dependencies..."
+  sudo apt-get update
+  sudo apt-get install -y build-essential procps curl file git zsh chromium-browser
 
   # Homebrew
-  if ! command -v brew &> /dev/null; then
-    missing+=("Homebrew")
+  if ! command -v brew &>/dev/null; then
+    print_step "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
   fi
 
-  if [ ${#missing[@]} -gt 0 ]; then
-    print_error "Missing prerequisites:"
-    for dep in "${missing[@]}"; do
-      echo "  - $dep"
-    done
-    echo ""
-    echo "Install them first:"
-    echo "  1. xcode-select --install"
-    echo "  2. /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
-    echo "  3. Restart terminal, then run this command again"
-    exit 1
-  fi
-
-  print_success "Prerequisites verified (Xcode CLT, Homebrew)"
+  print_success "Prerequisites verified (build-essential, Homebrew)"
 }
 
 install_gum() {
@@ -226,229 +214,6 @@ configure_fzf() {
   print_success "fzf configured"
 }
 
-configure_iterm() {
-  print_step "Configuring iTerm2..."
-  if [ -e ~/Library/Application\ Support/iTerm2/DynamicProfiles ] && [[ "$DRY_RUN" != "true" ]]; then
-    print_warning "iTerm2 already configured, skipping"
-    return 0
-  fi
-
-  if [[ "$DRY_RUN" != "true" ]]; then
-    mkdir -p ~/Library/Application\ Support/iTerm2/DynamicProfiles
-  fi
-  dry_ln "$DOTFILES_DIR/apps/iterm/profiles/default.json" ~/Library/Application\ Support/iTerm2/DynamicProfiles/default.json
-  if [[ "$DRY_RUN" != "true" ]]; then
-    source "$DOTFILES_DIR/apps/iterm/defaults"
-  else
-    echo "[dry-run] source $DOTFILES_DIR/apps/iterm/defaults"
-  fi
-  print_success "iTerm2 configured"
-}
-
-configure_iterm_shell_integration() {
-  print_step "Installing iTerm2 Shell Integration..."
-  local integration_file="$HOME/.iterm2_shell_integration.zsh"
-
-  if [ -f "$integration_file" ]; then
-    print_warning "Shell Integration already installed, skipping"
-    return 0
-  fi
-
-  run_with_spinner "Downloading..." curl -fsSL https://iterm2.com/shell_integration/zsh -o "$integration_file"
-  print_success "iTerm2 Shell Integration installed"
-}
-
-configure_macos() {
-  print_step "Applying macOS defaults..."
-  print_warning "This may ask for your password (sudo required for accessibility settings)"
-
-  if [[ "$DRY_RUN" != "true" ]]; then
-    source "$DOTFILES_DIR/macos/defaults"
-  else
-    echo "[dry-run] source $DOTFILES_DIR/macos/defaults"
-  fi
-  print_success "macOS defaults applied"
-}
-
-configure_cursor() {
-  print_step "Configuring Cursor..."
-
-  local cursor_dir="$HOME/Library/Application Support/Cursor/User"
-  if [[ "$DRY_RUN" != "true" ]]; then
-    mkdir -p "$cursor_dir"
-  fi
-
-  # Symlink settings and keybindings
-  dry_ln "$DOTFILES_DIR/apps/cursor/settings.json" "$cursor_dir/settings.json"
-  dry_ln "$DOTFILES_DIR/apps/cursor/keybindings.json" "$cursor_dir/keybindings.json"
-
-  # Install extensions if Cursor CLI is available
-  if command -v cursor &> /dev/null && [[ "$DRY_RUN" != "true" ]]; then
-    print_step "Installing Cursor extensions..."
-    local failed_extensions=()
-    while IFS= read -r extension || [[ -n "$extension" ]]; do
-      [[ -z "$extension" ]] && continue
-      if ! cursor --install-extension "$extension" 2>/dev/null; then
-        failed_extensions+=("$extension")
-      fi
-    done < "$DOTFILES_DIR/apps/cursor/extensions.txt"
-
-    if [ ${#failed_extensions[@]} -gt 0 ]; then
-      print_warning "Failed to install extensions: ${failed_extensions[*]}"
-    fi
-  elif [[ "$DRY_RUN" == "true" ]]; then
-    echo "[dry-run] Would install extensions from apps/cursor/extensions.txt"
-  else
-    print_warning "Cursor CLI not found, skipping extensions"
-  fi
-
-  print_success "Cursor configured"
-}
-
-configure_vscode() {
-  print_step "Configuring VSCode..."
-
-  local vscode_dir="$HOME/Library/Application Support/Code/User"
-  if [[ "$DRY_RUN" != "true" ]]; then
-    mkdir -p "$vscode_dir"
-  fi
-
-  # Use Cursor config (single source of truth - Cursor is a VSCode fork)
-  dry_ln "$DOTFILES_DIR/apps/cursor/settings.json" "$vscode_dir/settings.json"
-
-  # Install extensions if VSCode CLI is available
-  if command -v code &> /dev/null && [[ "$DRY_RUN" != "true" ]]; then
-    print_step "Installing VSCode extensions..."
-    local failed_extensions=()
-    while IFS= read -r extension || [[ -n "$extension" ]]; do
-      [[ -z "$extension" ]] && continue
-      if ! code --install-extension "$extension" 2>/dev/null; then
-        failed_extensions+=("$extension")
-      fi
-    done < "$DOTFILES_DIR/apps/cursor/extensions.txt"
-
-    if [ ${#failed_extensions[@]} -gt 0 ]; then
-      print_warning "Failed to install extensions: ${failed_extensions[*]}"
-    fi
-  elif [[ "$DRY_RUN" == "true" ]]; then
-    echo "[dry-run] Would install extensions from apps/cursor/extensions.txt"
-  else
-    print_warning "VSCode CLI not found, skipping extensions"
-  fi
-
-  print_success "VSCode configured"
-}
-
-configure_editors() {
-  print_step "Which editor(s) to configure?"
-
-  local choice
-  if has_gum; then
-    choice=$(gum choose "Both (Cursor + VSCode)" "Cursor only" "VSCode only" "Skip")
-  else
-    echo "1) Both (Cursor + VSCode)"
-    echo "2) Cursor only"
-    echo "3) VSCode only"
-    echo "4) Skip"
-    read -p "Choice [1]: " choice
-    choice=${choice:-1}
-    case $choice in
-      1) choice="Both (Cursor + VSCode)" ;;
-      2) choice="Cursor only" ;;
-      3) choice="VSCode only" ;;
-      4) choice="Skip" ;;
-    esac
-  fi
-
-  case "$choice" in
-    "Both (Cursor + VSCode)")
-      configure_cursor
-      configure_vscode
-      ;;
-    "Cursor only")
-      configure_cursor
-      ;;
-    "VSCode only")
-      configure_vscode
-      ;;
-    "Skip")
-      print_warning "Skipping editor configuration"
-      ;;
-  esac
-}
-
-configure_ai_tools() {
-  print_step "Configuring AI CLI tools..."
-
-  # Claude Code
-  if [[ "$DRY_RUN" != "true" ]]; then
-    mkdir -p ~/.claude
-  fi
-  dry_ln "$DOTFILES_DIR/apps/claude/settings.json" ~/.claude/settings.json
-
-  # CLAUDE.md (global memory)
-  if [ -f "$DOTFILES_DIR/apps/claude/CLAUDE.md" ]; then
-    dry_ln "$DOTFILES_DIR/apps/claude/CLAUDE.md" ~/.claude/CLAUDE.md
-  fi
-
-  # Claude Code Rules (symlink each file)
-  if [ -d "$DOTFILES_DIR/apps/claude/rules" ]; then
-    if [[ "$DRY_RUN" != "true" ]]; then
-      mkdir -p ~/.claude/rules
-    fi
-    for rule in "$DOTFILES_DIR/apps/claude/rules"/*.md; do
-      if [ -f "$rule" ]; then
-        dry_ln "$rule" ~/.claude/rules/$(basename "$rule")
-      fi
-    done
-    print_success "Claude Code rules configured"
-  fi
-
-  # Claude Code Skills (symlink entire directories)
-  if [ -d "$DOTFILES_DIR/apps/claude/skills" ]; then
-    if [[ "$DRY_RUN" != "true" ]]; then
-      mkdir -p ~/.claude/skills
-    fi
-    for skill_dir in "$DOTFILES_DIR/apps/claude/skills"/*/; do
-      if [ -d "$skill_dir" ]; then
-        skill_name=$(basename "$skill_dir")
-        dry_ln "$skill_dir" ~/.claude/skills/"$skill_name"
-      fi
-    done
-    print_success "Claude Code skills configured"
-  fi
-
-  print_success "Claude Code configured"
-
-  # Claude Code MCPs (user scope - available in all projects)
-  if command -v claude &> /dev/null && [[ "$DRY_RUN" != "true" ]]; then
-    print_step "Adding global MCPs..."
-    claude mcp add context7 --scope user --transport http https://mcp.context7.com/mcp 2>/dev/null || true
-    claude mcp add sequential-thinking --scope user -- npx -y @modelcontextprotocol/server-sequential-thinking 2>/dev/null || true
-    print_success "Global MCPs configured"
-  elif [[ "$DRY_RUN" == "true" ]]; then
-    echo "[dry-run] Would add global MCPs: context7, sequential-thinking"
-  fi
-
-  # Cursor MCP (global)
-  if [[ "$DRY_RUN" != "true" ]]; then
-    mkdir -p ~/.cursor
-  fi
-  dry_ln "$DOTFILES_DIR/apps/cursor/mcp.json" ~/.cursor/mcp.json
-  print_success "Cursor MCP configured"
-
-  # Gemini CLI
-  if command -v gemini &> /dev/null || [[ "$DRY_RUN" == "true" ]]; then
-    if [[ "$DRY_RUN" != "true" ]]; then
-      mkdir -p ~/.gemini
-    fi
-    dry_ln "$DOTFILES_DIR/apps/gemini/settings.json" ~/.gemini/settings.json
-    print_success "Gemini CLI configured"
-  else
-    print_warning "Gemini CLI not installed, skipping"
-  fi
-}
-
 # ============================================================================
 # MAIN INSTALL FUNCTION
 # ============================================================================
@@ -485,18 +250,13 @@ do_install() {
     trap cleanup_sudo EXIT
   fi
 
-  # Sequential installation (no choices needed)
+  # Sequential installation
   install_brew_packages
   install_shell_symlinks
   create_projects_folder
   configure_git_user
   configure_starship
   configure_fzf
-  configure_iterm
-  configure_iterm_shell_integration
-  configure_macos
-  configure_editors
-  configure_ai_tools
 
   # Done
   echo ""
@@ -511,7 +271,6 @@ do_install() {
   fi
   echo "  1. Add secrets to ~/.zshrc.local:"
   echo "     - GITHUB_PERSONAL_ACCESS_TOKEN"
-  echo "     - FIGMA_API_KEY"
   echo "  2. Restart terminal (or run: source ~/.zshrc) to load new configs"
 
   # Mark installation as complete
@@ -528,7 +287,7 @@ do_update() {
   # Check if dotfiles dir exists
   if [ ! -d "$DOTFILES_DIR" ]; then
     print_error "$DOTFILES_DIR not found"
-    echo "Run bootstrap first: curl -fsSL https://raw.githubusercontent.com/rafaelcruzazevedo/dotfiles/master/bootstrap | bash"
+    echo "Run bootstrap first: curl -fsSL https://raw.githubusercontent.com/rafazsh/dotfiles/linux/bootstrap | bash"
     exit 1
   fi
 

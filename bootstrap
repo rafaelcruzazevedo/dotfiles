@@ -3,13 +3,13 @@
 # ============================================================================
 # DOTFILES BOOTSTRAP
 # ============================================================================
-# Run on a fresh Mac:
-# curl -fsSL https://raw.githubusercontent.com/rafaelcruzazevedo/dotfiles/master/bootstrap | bash
+# Run on a fresh Ubuntu 24.04 VPS:
+# curl -fsSL https://raw.githubusercontent.com/rafazsh/dotfiles/linux/bootstrap | bash
 # ============================================================================
 
 set -e
 
-DOTFILES_REPO="git@github.com:rafaelcruzazevedo/dotfiles.git"
+DOTFILES_REPO="git@github.com:rafazsh/dotfiles.git"
 
 # Detect DOTFILES_DIR:
 # - If running from within repo (has lib/main.sh), use that directory
@@ -59,33 +59,19 @@ print_error() {
 # ============================================================================
 
 check_prerequisites() {
-  print_step "Checking prerequisites..."
-  local missing=()
+  # Install system dependencies (ref: docs.brew.sh/Homebrew-on-Linux)
+  print_step "Installing system dependencies..."
+  sudo apt-get update
+  sudo apt-get install -y build-essential procps curl file git zsh chromium-browser
 
-  # Xcode CLT
-  if ! xcode-select -p &> /dev/null; then
-    missing+=("Xcode Command Line Tools")
+  # Homebrew (install automatically if not present)
+  if ! command -v brew &>/dev/null; then
+    print_step "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
   fi
 
-  # Homebrew
-  if ! command -v brew &> /dev/null; then
-    missing+=("Homebrew")
-  fi
-
-  if [ ${#missing[@]} -gt 0 ]; then
-    print_error "Missing prerequisites:"
-    for dep in "${missing[@]}"; do
-      echo "  - $dep"
-    done
-    echo ""
-    echo "Install them first:"
-    echo "  1. xcode-select --install"
-    echo "  2. /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
-    echo "  3. Restart terminal, then run bootstrap again"
-    exit 1
-  fi
-
-  print_success "Prerequisites verified (Xcode CLT, Homebrew)"
+  print_success "Prerequisites verified"
 }
 
 install_gum() {
@@ -142,21 +128,20 @@ EOF
     chmod 600 ~/.ssh/known_hosts
   fi
 
-  # Create SSH config for macOS (required since Sierra 10.12.2)
-  print_step "Configuring SSH for macOS..."
+  # Create SSH config
+  print_step "Configuring SSH..."
   if [ ! -f ~/.ssh/config ]; then
     cat > ~/.ssh/config << 'EOF'
 Host github.com
   AddKeysToAgent yes
-  UseKeychain yes
   IdentityFile ~/.ssh/id_ed25519
 EOF
     chmod 600 ~/.ssh/config
   fi
 
-  # Start ssh-agent and add key with Apple Keychain
+  # Start ssh-agent and add key
   eval "$(ssh-agent -s)" > /dev/null
-  ssh-add --apple-use-keychain ~/.ssh/id_ed25519 2>/dev/null
+  ssh-add ~/.ssh/id_ed25519 2>/dev/null
 
   # Show public key with instructions
   echo ""
@@ -167,11 +152,7 @@ EOF
       "$(cat ~/.ssh/id_ed25519.pub)"
     echo ""
 
-    # Copy to clipboard
-    cat ~/.ssh/id_ed25519.pub | pbcopy
-    print_success "Public key copied to clipboard!"
     echo ""
-
     gum style --foreground 248 "Add this key to GitHub:"
     gum style --foreground 39 "https://github.com/settings/ssh/new"
     echo ""
@@ -184,9 +165,6 @@ EOF
     echo "║ Your SSH Public Key (ed25519):                                   ║"
     echo "╚══════════════════════════════════════════════════════════════════╝"
     cat ~/.ssh/id_ed25519.pub
-    echo ""
-    cat ~/.ssh/id_ed25519.pub | pbcopy
-    echo "(Key copied to clipboard)"
     echo ""
     echo "Add this key to: https://github.com/settings/ssh/new"
     echo ""
