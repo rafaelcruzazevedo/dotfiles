@@ -1,32 +1,16 @@
-# Dotfiles
+# Dotfiles (Linux)
 
-Personal macOS development environment.
+Personal Linux/VPS development environment.
 
 ## Quick Start
-
-### Prerequisites
-
-Install these **before** running bootstrap:
-
-1. **Xcode Command Line Tools**
-
-   ```bash
-   xcode-select --install
-   ```
-
-2. **Homebrew**
-
-   ```bash
-   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-   ```
-
-3. **Restart your terminal** (only needed if you just installed Homebrew)
 
 ### New Machine
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/rafaelcruzazevedo/dotfiles/master/bootstrap | zsh
+curl -fsSL https://raw.githubusercontent.com/rafazsh/dotfiles/linux/bootstrap | bash
 ```
+
+No prerequisites — the bootstrap installs everything (system packages, Homebrew, tools).
 
 ### Existing Machine
 
@@ -56,14 +40,6 @@ This shows an interactive menu:
 
 ## Troubleshooting
 
-### Icons not displaying
-
-```bash
-brew install font-meslo-lg-nerd-font
-```
-
-Set font in iTerm2: **Preferences > Profiles > Text**
-
 ### Starship prompt not showing
 
 ```bash
@@ -71,6 +47,14 @@ brew install starship
 ```
 
 ### fzf key bindings not working
+
+On root/VPS setups where Homebrew runs under a `linuxbrew` user:
+
+```bash
+/home/linuxbrew/.linuxbrew/opt/fzf/install --key-bindings --completion --no-update-rc --no-bash --no-fish
+```
+
+Otherwise:
 
 ```bash
 $(brew --prefix)/opt/fzf/install --key-bindings --completion --no-update-rc --no-bash --no-fish
