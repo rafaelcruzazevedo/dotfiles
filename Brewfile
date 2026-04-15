@@ -1,6 +1,5 @@
 # Taps
 tap "hashicorp/tap"
-tap "atlassian/homebrew-acli"
 tap "oven-sh/bun"
 
 # === CORE ===
@@ -46,9 +45,6 @@ brew "act"
 cask "docker-desktop"
 brew "helm"
 cask "ngrok"
-
-# === ATLASSIAN ===
-brew "acli"
 
 # === MONITORING ===
 brew "sentry-cli"
