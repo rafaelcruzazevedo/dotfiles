@@ -1,8 +1,25 @@
+# Local overrides (secrets, machine-specific)
 *.local
+shell/.zshrc.local
+shell/.vimrc.local
+git/.gitconfig.local
+
+# Zsh compiled files
 *.zwc*
 
 # Installation state
 .installing
 
-# Claude
+# Backup files created by install.sh
+*.backup
+*.backup.20*
+
+# Claude runtime state (written by Claude Code, not portable)
 .claude/settings.local.json
+apps/claude/settings.local.json
+apps/claude/plans/*.md
+!apps/claude/plans/.gitkeep
+apps/claude/plugins/installed_plugins.json
+
+# macOS
+.DS_Store

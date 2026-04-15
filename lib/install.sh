@@ -93,7 +93,8 @@ install_brew_packages() {
     echo "[dry-run] Would run: brew bundle --file=$DOTFILES_DIR/Brewfile"
   else
     brew bundle --file="$DOTFILES_DIR/Brewfile" 2>&1 | tee "$log_file"
-    local bundle_status=${PIPESTATUS[0]}
+    # zsh uses 'pipestatus' (lowercase, 1-indexed); PIPESTATUS is bash-only
+    local bundle_status=${pipestatus[1]}
     if [ $bundle_status -ne 0 ]; then
       print_warning "Some packages failed to install. Check: $log_file"
     fi
@@ -124,12 +125,11 @@ install_shell_symlinks() {
   fi
   dry_ln "$DOTFILES_DIR/git/.gitconfig" ~/.gitconfig
 
-  # Backup .gitaliases if it exists and is not a symlink
-  if [ -f ~/.gitaliases ] && [ ! -L ~/.gitaliases ] && [[ "$DRY_RUN" != "true" ]]; then
-    cp ~/.gitaliases ~/.gitaliases.backup.$(date +%Y%m%d) 2>/dev/null || true
-    print_warning "Backed up existing .gitaliases"
-  fi
+  # .gitaliases — dry_ln handles backup automatically
   dry_ln "$DOTFILES_DIR/git/.gitaliases" ~/.gitaliases
+
+  # Global gitignore (referenced by .gitconfig core.excludesfile)
+  dry_ln "$DOTFILES_DIR/git/.gitignore_global" ~/.gitignore_global
 
   print_success "Shell symlinks created"
 }
@@ -207,13 +207,7 @@ configure_starship() {
   if [[ "$DRY_RUN" != "true" ]]; then
     mkdir -p ~/.config
   fi
-
-  # Backup starship.toml if it exists and is not a symlink
-  if [ -f ~/.config/starship.toml ] && [ ! -L ~/.config/starship.toml ] && [[ "$DRY_RUN" != "true" ]]; then
-    cp ~/.config/starship.toml ~/.config/starship.toml.backup.$(date +%Y%m%d) 2>/dev/null || true
-    print_warning "Backed up existing starship.toml"
-  fi
-
+  # dry_ln handles backup automatically
   dry_ln "$DOTFILES_DIR/shell/starship.toml" ~/.config/starship.toml
   print_success "Starship configured"
 }
@@ -228,15 +222,20 @@ configure_fzf() {
 
 configure_iterm() {
   print_step "Configuring iTerm2..."
-  if [ -e ~/Library/Application\ Support/iTerm2/DynamicProfiles ] && [[ "$DRY_RUN" != "true" ]]; then
+  local iterm_dir="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
+  local iterm_profile="$iterm_dir/default.json"
+  local expected_target="$DOTFILES_DIR/apps/iterm/profiles/default.json"
+
+  # Idempotency: only skip if the symlink already points to the right place
+  if [ -L "$iterm_profile" ] && [ "$(readlink "$iterm_profile")" = "$expected_target" ] && [[ "$DRY_RUN" != "true" ]]; then
     print_warning "iTerm2 already configured, skipping"
     return 0
   fi
 
   if [[ "$DRY_RUN" != "true" ]]; then
-    mkdir -p ~/Library/Application\ Support/iTerm2/DynamicProfiles
+    mkdir -p "$iterm_dir"
   fi
-  dry_ln "$DOTFILES_DIR/apps/iterm/profiles/default.json" ~/Library/Application\ Support/iTerm2/DynamicProfiles/default.json
+  dry_ln "$expected_target" "$iterm_profile"
   if [[ "$DRY_RUN" != "true" ]]; then
     source "$DOTFILES_DIR/apps/iterm/defaults"
   else
@@ -377,78 +376,6 @@ configure_editors() {
   esac
 }
 
-configure_ai_tools() {
-  print_step "Configuring AI CLI tools..."
-
-  # Claude Code
-  if [[ "$DRY_RUN" != "true" ]]; then
-    mkdir -p ~/.claude
-  fi
-  dry_ln "$DOTFILES_DIR/apps/claude/settings.json" ~/.claude/settings.json
-
-  # CLAUDE.md (global memory)
-  if [ -f "$DOTFILES_DIR/apps/claude/CLAUDE.md" ]; then
-    dry_ln "$DOTFILES_DIR/apps/claude/CLAUDE.md" ~/.claude/CLAUDE.md
-  fi
-
-  # Claude Code Rules (symlink each file)
-  if [ -d "$DOTFILES_DIR/apps/claude/rules" ]; then
-    if [[ "$DRY_RUN" != "true" ]]; then
-      mkdir -p ~/.claude/rules
-    fi
-    for rule in "$DOTFILES_DIR/apps/claude/rules"/*.md; do
-      if [ -f "$rule" ]; then
-        dry_ln "$rule" ~/.claude/rules/$(basename "$rule")
-      fi
-    done
-    print_success "Claude Code rules configured"
-  fi
-
-  # Claude Code Skills (symlink entire directories)
-  if [ -d "$DOTFILES_DIR/apps/claude/skills" ]; then
-    if [[ "$DRY_RUN" != "true" ]]; then
-      mkdir -p ~/.claude/skills
-    fi
-    for skill_dir in "$DOTFILES_DIR/apps/claude/skills"/*/; do
-      if [ -d "$skill_dir" ]; then
-        skill_name=$(basename "$skill_dir")
-        dry_ln "$skill_dir" ~/.claude/skills/"$skill_name"
-      fi
-    done
-    print_success "Claude Code skills configured"
-  fi
-
-  print_success "Claude Code configured"
-
-  # Claude Code MCPs (user scope - available in all projects)
-  if command -v claude &> /dev/null && [[ "$DRY_RUN" != "true" ]]; then
-    print_step "Adding global MCPs..."
-    claude mcp add context7 --scope user --transport http https://mcp.context7.com/mcp 2>/dev/null || true
-    claude mcp add sequential-thinking --scope user -- npx -y @modelcontextprotocol/server-sequential-thinking 2>/dev/null || true
-    print_success "Global MCPs configured"
-  elif [[ "$DRY_RUN" == "true" ]]; then
-    echo "[dry-run] Would add global MCPs: context7, sequential-thinking"
-  fi
-
-  # Cursor MCP (global)
-  if [[ "$DRY_RUN" != "true" ]]; then
-    mkdir -p ~/.cursor
-  fi
-  dry_ln "$DOTFILES_DIR/apps/cursor/mcp.json" ~/.cursor/mcp.json
-  print_success "Cursor MCP configured"
-
-  # Gemini CLI
-  if command -v gemini &> /dev/null || [[ "$DRY_RUN" == "true" ]]; then
-    if [[ "$DRY_RUN" != "true" ]]; then
-      mkdir -p ~/.gemini
-    fi
-    dry_ln "$DOTFILES_DIR/apps/gemini/settings.json" ~/.gemini/settings.json
-    print_success "Gemini CLI configured"
-  else
-    print_warning "Gemini CLI not installed, skipping"
-  fi
-}
-
 # ============================================================================
 # MAIN INSTALL FUNCTION
 # ============================================================================
@@ -496,7 +423,6 @@ do_install() {
   configure_iterm_shell_integration
   configure_macos
   configure_editors
-  configure_ai_tools
 
   # Done
   echo ""

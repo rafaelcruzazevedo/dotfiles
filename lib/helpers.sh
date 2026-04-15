@@ -85,15 +85,36 @@ run_cmd() {
   fi
 }
 
-# Dry-run aware symlink (with source file existence check)
+# Dry-run aware symlink (with source file existence check and target safety)
 dry_ln() {
   local src="$1"
   local dst="$2"
 
   # Check if source exists (file or directory)
-  if [ ! -e "$src" ] && [ ! -d "$src" ]; then
+  if [ ! -e "$src" ]; then
     print_warning "Source does not exist: $src"
     return 1
+  fi
+
+  # If target already points to src, nothing to do (strict idempotency)
+  if [ -L "$dst" ] && [ "$(readlink "$dst")" = "$src" ]; then
+    return 0
+  fi
+
+  # If target is a regular file or directory (not a symlink), back it up once
+  # to avoid silent data loss
+  if [ -e "$dst" ] && [ ! -L "$dst" ]; then
+    local backup="$dst.backup"
+    if [ ! -e "$backup" ]; then
+      if [[ "$DRY_RUN" == "true" ]]; then
+        echo "[dry-run] cp -R \"$dst\" \"$backup\"  # backing up non-symlink target"
+      else
+        cp -R "$dst" "$backup" 2>/dev/null && \
+          print_warning "Backed up existing file: $backup"
+      fi
+    else
+      print_warning "Target exists (and .backup already present): $dst"
+    fi
   fi
 
   if [[ "$DRY_RUN" == "true" ]]; then

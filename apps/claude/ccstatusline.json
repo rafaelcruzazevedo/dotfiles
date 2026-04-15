@@ -1,0 +1,110 @@
+{
+  "version": 3,
+  "lines": [
+    [
+      {
+        "id": "1",
+        "type": "model",
+        "color": "blue"
+      },
+      {
+        "id": "2",
+        "type": "separator"
+      },
+      {
+        "id": "4",
+        "type": "context-percentage",
+        "color": "brightMagenta"
+      },
+      {
+        "id": "5",
+        "type": "separator",
+        "color": "green"
+      },
+      {
+        "id": "6",
+        "type": "tokens-input",
+        "color": "brightYellow"
+      },
+      {
+        "id": "7",
+        "type": "separator",
+        "color": "brightRed"
+      },
+      {
+        "id": "9a89444a-1890-46e6-921e-a0382318e256",
+        "type": "tokens-output",
+        "color": "brightCyan"
+      },
+      {
+        "id": "c2791448-fa04-4fca-8c6c-eb6cd2010e7f",
+        "type": "separator",
+        "color": "brightBlue"
+      },
+      {
+        "id": "3",
+        "type": "tokens-total",
+        "color": "brightBlue"
+      }
+    ],
+    [
+      {
+        "id": "d4741254-9b87-4e74-b455-30335b98487a",
+        "type": "session-clock"
+      },
+      {
+        "id": "81c628c3-1c77-490c-aef1-222423182de8",
+        "type": "separator"
+      },
+      {
+        "id": "367d1146-6986-43c7-9c03-0bf6e459219b",
+        "type": "session-cost"
+      },
+      {
+        "id": "bd3727c9-2eb9-41c4-9929-cbca5235258a",
+        "type": "separator"
+      },
+      {
+        "id": "801c84a7-bbd0-46a3-bd73-204ce1d0a685",
+        "type": "git-branch",
+        "color": "cyan"
+      },
+      {
+        "id": "71ff74c0-3600-41d6-b25f-14e822c2281b",
+        "type": "separator"
+      },
+      {
+        "id": "d48489e1-cb0f-41ed-83e2-7cad7ac6c102",
+        "type": "git-changes",
+        "color": "yellow"
+      },
+      {
+        "id": "c1695430-1ba0-4167-bc11-3539c70fec15",
+        "type": "separator"
+      },
+      {
+        "id": "4b8ad0be-c2a7-4277-8047-3cfaabe0b3ce",
+        "type": "block-timer",
+        "color": "brightRed"
+      }
+    ],
+    []
+  ],
+  "flexMode": "full-minus-40",
+  "compactThreshold": 60,
+  "colorLevel": 2,
+  "inheritSeparatorColors": false,
+  "globalBold": false,
+  "powerline": {
+    "enabled": false,
+    "separators": [
+      ""
+    ],
+    "separatorInvertBackground": [
+      false
+    ],
+    "startCaps": [],
+    "endCaps": [],
+    "autoAlign": false
+  }
+}

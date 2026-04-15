@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "mcp-integration",
+  "owner": "anthropics",
+  "repo": "claude-code",
+  "path": "plugins/plugin-dev/skills/mcp-integration",
+  "branch": "main",
+  "sha": "3e57353b7b88f20216666d616b14015f3574554c",
+  "source": "manual"
+}

@@ -1,15 +1,52 @@
 {
-  "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "model": "claude-sonnet-4-5-20250929",
-  "alwaysThinkingEnabled": true,
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(**)",
+      "WebFetch(*)",
+      "WebSearch",
+      "mcp__*",
+      "mcp__claude_ai_Figma__get_design_context",
+      "mcp__claude_ai_Atlassian__getConfluenceSpaces",
+      "mcp__claude_ai_Atlassian__searchConfluenceUsingCql",
+      "mcp__claude_ai_Atlassian__getAccessibleAtlassianResources",
+      "mcp__claude_ai_Atlassian__getConfluencePage",
+      "mcp__claude_ai_Slack__slack_search_users",
+      "mcp__claude_ai_Slack__slack_send_message",
+      "mcp__claude_ai_Slack__slack_search_channels",
+      "mcp__claude_ai_Slack__slack_read_channel",
+      "mcp__claude_ai_Slack__slack_search_public_and_private",
+      "mcp__v0__findChats",
+      "mcp__claude_ai_Figma__get_screenshot"
+    ],
+    "deny": [
+      "Bash(sudo rm -rf *)",
+      "Bash(DROP TABLE *)",
+      "Bash(kubectl delete *)"
+    ],
+    "defaultMode": "default"
+  },
   "statusLine": {
     "type": "command",
     "command": "npx -y ccstatusline@latest",
     "padding": 0
   },
-  "outputStyle": "Explanatory",
-  "permissions": {
-    "defaultMode": "acceptEdits"
+  "enabledPlugins": {
+    "telegram@claude-plugins-official": false
   },
-  "cleanupPeriodDays": 30
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    }
+  },
+  "voiceEnabled": true,
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
+  "skipAutoPermissionPrompt": true,
+  "useAutoModeDuringPlan": true
 }

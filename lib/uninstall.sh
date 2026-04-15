@@ -11,7 +11,7 @@
 remove_shell_symlinks() {
   print_step "Removing shell symlinks..."
 
-  for file in ~/.zshrc ~/.vimrc ~/.gitconfig ~/.gitaliases; do
+  for file in ~/.zshrc ~/.vimrc ~/.gitconfig ~/.gitaliases ~/.gitignore_global; do
     if [ -L "$file" ]; then
       rm -f "$file"
       print_success "Removed $file"
@@ -59,62 +59,6 @@ remove_editor_config() {
     rm -f "$vscode_dir/settings.json"
     print_success "Removed VSCode settings.json"
   fi
-}
-
-remove_ai_config() {
-  print_step "Removing AI CLI configuration..."
-
-  # Claude Code
-  if [ -L ~/.claude/settings.json ]; then
-    rm -f ~/.claude/settings.json
-    print_success "Removed Claude Code settings"
-  fi
-
-  if [ -L ~/.claude/CLAUDE.md ]; then
-    rm -f ~/.claude/CLAUDE.md
-    print_success "Removed Claude Code memory"
-  fi
-
-  # Claude Code Rules
-  if [ -d ~/.claude/rules ]; then
-    for rule in ~/.claude/rules/*.md; do
-      if [ -L "$rule" ]; then
-        rm -f "$rule"
-      fi
-    done
-    rmdir ~/.claude/rules 2>/dev/null || true
-    print_success "Removed Claude Code rules"
-  fi
-
-  # Claude Code Skills
-  if [ -d ~/.claude/skills ]; then
-    for skill in ~/.claude/skills/*/; do
-      if [ -L "${skill%/}" ]; then
-        rm -f "${skill%/}"
-      fi
-    done
-    rmdir ~/.claude/skills 2>/dev/null || true
-    print_success "Removed Claude Code skills"
-  fi
-
-  # Cursor MCP
-  if [ -L ~/.cursor/mcp.json ]; then
-    rm -f ~/.cursor/mcp.json
-    print_success "Removed Cursor MCP config"
-  fi
-
-  # Gemini CLI
-  if [ -L ~/.gemini/settings.json ]; then
-    rm -f ~/.gemini/settings.json
-    print_success "Removed Gemini CLI config"
-  fi
-
-  # Cleanup empty directories
-  for dir in ~/.claude ~/.cursor ~/.gemini; do
-    if [ -d "$dir" ] && [ -z "$(ls -A "$dir" 2>/dev/null)" ]; then
-      rmdir "$dir" 2>/dev/null && print_success "Removed empty $dir"
-    fi
-  done
 }
 
 restore_backups() {
@@ -190,7 +134,6 @@ do_uninstall() {
   remove_config_symlinks
   remove_iterm_config
   remove_editor_config
-  remove_ai_config
   restore_backups
   remove_dotfiles_dir
 

@@ -73,7 +73,7 @@
     attributesfile = ~/.gitattributes
     autocrlf = false
     editor = vim
-    excludesfile = ~/.gitignore
+    excludesfile = ~/.gitignore_global
     quotepath = false
     safecrlf = true
     whitespace = cr-at-eol,space-before-tab,-indent-with-non-tab,trailing-space

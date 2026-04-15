@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "writing-rules",
+  "owner": "anthropics",
+  "repo": "claude-code",
+  "path": "plugins/hookify/skills/writing-rules",
+  "branch": "main",
+  "sha": "7617490248ddc6fe04a7cc7513c6a33fa482e854",
+  "source": "manual"
+}

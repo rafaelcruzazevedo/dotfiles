@@ -210,9 +210,9 @@
 
 | Alias | Command | Description |
 |-------|---------|-------------|
-| `cp` | `cherry-pick` | Cherry-pick commit |
-| `cpa` | `cherry-pick --abort` | Abort cherry-pick |
-| `cpc` | `cherry-pick --continue` | Continue cherry-pick |
+| `cpk` | `cherry-pick` | Cherry-pick commit (uses `cpk` to avoid shadowing unix `cp`) |
+| `cpka` | `cherry-pick --abort` | Abort cherry-pick |
+| `cpkc` | `cherry-pick --continue` | Continue cherry-pick |
 
 ### Utils Extras
 

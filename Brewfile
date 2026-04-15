@@ -11,7 +11,6 @@ brew "diff-so-fancy"
 brew "zsh"
 brew "zplug"
 brew "starship"
-brew "chezmoi"
 
 # === MODERN CLI TOOLS ===
 brew "bat"
@@ -21,6 +20,8 @@ brew "ripgrep"
 brew "zoxide"
 brew "fzf"
 brew "gum"
+brew "coreutils"    # GNU coreutils (gdate, gsed, etc.)
+brew "cmake"        # native build dep for many tools
 
 # === LANGUAGES & RUNTIMES ===
 brew "volta"
@@ -42,9 +43,9 @@ brew "hashicorp/tap/terraform"
 brew "kubectl"
 brew "k9s"
 brew "act"
-cask "docker"
-cask "lens"
+cask "docker-desktop"
 brew "helm"
+cask "ngrok"
 
 # === ATLASSIAN ===
 brew "acli"
@@ -85,17 +86,12 @@ cask "nordvpn"
 cask "whatsapp"
 cask "loom"
 
-# === AI TOOLS ===
-cask "claude-code"
-cask "cursor-cli"
-brew "gemini-cli"
-
 # === DATABASE ===
 cask "postico"
-brew "postgresql@16"
-cask "requestly"
-cask "postman"
-cask "postman-agent"
+brew "postgresql@17"
+
+# === API CLIENTS ===
+cask "bruno"
 
 # === FONTS ===
 cask "font-meslo-lg-nerd-font"

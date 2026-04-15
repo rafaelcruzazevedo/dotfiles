@@ -7,7 +7,7 @@
 - **zplug** - Minimal Zsh plugin manager
 - **iTerm2** - Terminal with Dynamic Profiles and Shell Integration
 - **Cursor/VSCode** - Editor configuration with extensions and MCP servers
-- **AI tools** - Claude Code, Gemini CLI with shared MCP servers
+- **AI tools** - Claude Code (rules, skills, plans, plugins)
 - **DevOps** - AWS SSO, Terraform, kubectl, Docker, Atlassian CLI
 
 ## Prerequisites
@@ -46,7 +46,7 @@ See [`Brewfile`](Brewfile) for the complete list including:
 - Languages & runtimes (Node.js via Volta, Python, Java, Bun)
 - DevOps tools (AWS CLI, Terraform, kubectl, k9s)
 - Modern CLI replacements (eza, bat, fd, ripgrep, zoxide, fzf)
-- AI tools (Claude Code, Cursor, Gemini CLI)
+- AI tools (Claude Code, Cursor)
 - Atlassian CLI (acli)
 - Monitoring (sentry-cli)
 - Secrets management (1password-cli)
@@ -95,17 +95,53 @@ dotfiles/
 │   │   └── extensions.txt
 │   ├── claude/
 │   │   ├── settings.json
-│   │   ├── CLAUDE.md
 │   │   ├── rules/            # Claude Code Rules
-│   │   └── skills/           # Claude Code Skills
-│   ├── gemini/
-│   │   └── settings.json
+│   │   ├── skills/           # Claude Code Skills
+│   │   ├── plans/            # Claude Code Plans
+│   │   └── plugins/          # Claude Code Plugins config
 │   └── iterm/
 │       ├── defaults
 │       └── profiles/default.json
 ├── macos/
 │   └── defaults
 └── Brewfile
+```
+
+## Claude Code layout
+
+The `apps/claude/` tree uses two different strategies depending on whether
+Claude writes to the file at runtime:
+
+| Path | Strategy | Rationale |
+|------|----------|-----------|
+| `apps/claude/settings.json` | symlink | Authored config — edits in repo apply immediately |
+| `apps/claude/rules/*.md` | symlink (per file) | Authored rules — edits propagate |
+| `apps/claude/skills/*/` | symlink (per directory) | Authored skills — edits propagate |
+| `apps/claude/ccstatusline.json` | symlink | Status line config referenced from `settings.json` |
+| `apps/claude/plans/` | seed-only | Claude writes here at runtime; repo only seeds empty state |
+| `apps/claude/plugins/known_marketplaces.json` | seed-only | Portable marketplace list; Claude manages install state separately |
+
+`installed_plugins.json` is intentionally **not** tracked — it contains
+absolute paths and cache locations that differ per machine.
+
+### Adding a Claude skill
+
+```bash
+cd apps/claude/skills
+mkdir my-skill
+cat > my-skill/SKILL.md <<'EOF'
+---
+name: my-skill
+description: What the skill does
+---
+
+# My Skill
+
+...
+EOF
+
+# Re-run install to create the symlink
+./bootstrap install
 ```
 
 ## Extending
@@ -128,7 +164,6 @@ export AWS_PROFILE="dev-admin"
 
 # AI Services
 export ANTHROPIC_API_KEY="..."
-export GEMINI_API_KEY="..."
 export OPENAI_API_KEY="..."
 
 # Development
@@ -159,25 +194,10 @@ export NOTION_API_KEY="..."
 | Tool | Variable | Documentation |
 |------|----------|---------------|
 | Claude Code | `ANTHROPIC_API_KEY` | [Anthropic Console](https://console.anthropic.com/settings/keys) |
-| Gemini CLI | `GEMINI_API_KEY` | [AI Studio](https://aistudio.google.com/apikey) |
 | DigitalOcean | `DIGITALOCEAN_ACCESS_TOKEN` | [DO Docs](https://docs.digitalocean.com/reference/api/create-personal-access-token/) |
 | Sentry CLI | `SENTRY_AUTH_TOKEN` | [Sentry Docs](https://docs.sentry.io/product/cli/configuration/) |
 | GitHub MCP | `GITHUB_PERSONAL_ACCESS_TOKEN` | [GitHub Tokens](https://github.com/settings/tokens) |
 | Notion MCP | `NOTION_API_KEY` | [Notion Integrations](https://www.notion.so/my-integrations) |
-
-## MCP Servers
-
-Model Context Protocol servers configured in [`apps/cursor/mcp.json`](apps/cursor/mcp.json):
-
-| Server | Transport | Auth |
-|--------|-----------|------|
-| context7 | HTTP | None |
-| sequential-thinking | NPX | None |
-| pdf-reader | NPX | None |
-| excel-csv | NPX | None |
-| atlassian | SSE | OAuth (browser popup) |
-| github | HTTP | PAT via env var |
-| notion | NPX | API key via env var |
 
 ## Modern CLI Tools
 

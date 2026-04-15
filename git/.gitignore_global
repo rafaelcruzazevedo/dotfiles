@@ -1,0 +1,39 @@
+# === macOS ===
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# === Editors ===
+# Vim
+*.swp
+*.swo
+*~
+.*.swp
+.*.swo
+
+# JetBrains
+.idea/
+*.iml
+
+# VS Code / Cursor
+.vscode/
+.history/
+
+# Sublime
+*.sublime-workspace
+*.sublime-project
+
+# === Tooling ===
+# Direnv
+.envrc.local
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# === Logs & temp ===
+*.log
+*.tmp
+.cache/

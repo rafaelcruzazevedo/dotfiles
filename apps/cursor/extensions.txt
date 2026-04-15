@@ -4,10 +4,11 @@ austenc.tailwind-docs
 biomejs.biome
 bradlc.vscode-tailwindcss
 davidanson.vscode-markdownlint
+dbaeumer.vscode-eslint
 dionmunk.vscode-notes
 eamodio.gitlens
+esbenp.prettier-vscode
 formulahendry.auto-rename-tag
-google.gemini-cli-vscode-ide-companion
 maximus136.change-string-case
 mermaidchart.vscode-mermaid-chart
 mgmcdermott.vscode-language-babel
