@@ -8,7 +8,7 @@ brew "git-delta"
 brew "git-delete-merged-branches"
 brew "diff-so-fancy"
 brew "zsh"
-brew "zplug"
+brew "zinit"
 brew "starship"
 
 # === MODERN CLI TOOLS ===

@@ -17,34 +17,19 @@ if [[ -f /opt/homebrew/bin/brew ]]; then
 fi
 
 # ============================================================================
-# ZPLUG - Plugin Manager
+# ZINIT - Plugin Manager
 # ============================================================================
 
-export ZPLUG_HOME=/opt/homebrew/opt/zplug
-if [ -f "$ZPLUG_HOME/init.zsh" ]; then
-  source "$ZPLUG_HOME/init.zsh"
-else
-  echo "Warning: zplug not installed. Run: brew install zplug"
+if [[ -f /opt/homebrew/opt/zinit/zinit.zsh ]]; then
+  source /opt/homebrew/opt/zinit/zinit.zsh
+
+  zinit light zsh-users/zsh-completions
+  zinit light zsh-users/zsh-autosuggestions
+  zinit light zsh-users/zsh-history-substring-search
+  zinit light zsh-users/zsh-syntax-highlighting
+  zinit snippet OMZP::git
 fi
 
-# Load plugins only if zplug is available
-if type zplug &>/dev/null; then
-  # Essential plugins
-  zplug "zsh-users/zsh-completions"
-  zplug "zsh-users/zsh-autosuggestions"
-  zplug "zsh-users/zsh-syntax-highlighting", defer:2
-  zplug "zsh-users/zsh-history-substring-search", defer:3
-
-  # Git plugin (from oh-my-zsh, provides aliases like gco, gst, etc.)
-  zplug "plugins/git", from:oh-my-zsh
-
-  # Install plugins if missing
-  if ! zplug check; then
-      zplug install
-  fi
-
-  zplug load
-fi
 
 # ============================================================================
 # MODERN CLI TOOLS
@@ -155,3 +140,4 @@ test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell
 
 # Source local zsh config (secrets, machine-specific)
 [ -s "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
+export PATH="$HOME/.local/bin:$PATH"

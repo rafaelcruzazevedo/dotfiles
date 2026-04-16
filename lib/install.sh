@@ -85,21 +85,69 @@ cleanup_sudo() {
 install_brew_packages() {
   print_step "Installing Homebrew packages..."
 
-  local log_file="/tmp/brew-bundle-$(date +%Y%m%d-%H%M%S).log"
+  local brewfile="$DOTFILES_DIR/Brewfile"
+  local log_file="/tmp/brew-install-$(date +%Y%m%d-%H%M%S).log"
+  local failed=()
 
-  # brew bundle returns non-zero if any package fails, but we want to continue
-  set +e
   if [[ "$DRY_RUN" == "true" ]]; then
-    echo "[dry-run] Would run: brew bundle --file=$DOTFILES_DIR/Brewfile"
-  else
-    brew bundle --file="$DOTFILES_DIR/Brewfile" 2>&1 | tee "$log_file"
-    # zsh uses 'pipestatus' (lowercase, 1-indexed); PIPESTATUS is bash-only
-    local bundle_status=${pipestatus[1]}
-    if [ $bundle_status -ne 0 ]; then
-      print_warning "Some packages failed to install. Check: $log_file"
-    fi
+    echo "[dry-run] Would install packages from $brewfile"
+    print_success "Homebrew packages installed"
+    return 0
   fi
-  set -e
+
+  # --- Taps ---
+  local taps=("${(@f)$(grep '^tap ' "$brewfile" | sed 's/^tap "\([^"]*\)".*/\1/')}")
+
+  if [ ${#taps[@]} -gt 0 ]; then
+    print_step "Adding taps..."
+    for tap in "${taps[@]}"; do
+      [[ -z "$tap" ]] && continue
+      if ! brew tap "$tap" >> "$log_file" 2>&1; then
+        failed+=("tap: $tap")
+        print_warning "Failed to tap: $tap"
+      fi
+    done
+  fi
+
+  # --- Formulas ---
+  local formulas=("${(@f)$(grep '^brew ' "$brewfile" | sed 's/^brew "\([^"]*\)".*/\1/')}")
+  local total=${#formulas[@]}
+  local i=0
+
+  for formula in "${formulas[@]}"; do
+    [[ -z "$formula" ]] && continue
+    ((i++))
+    print_step "[$i/$total] $formula"
+    if ! brew install "$formula" >> "$log_file" 2>&1; then
+      failed+=("brew: $formula")
+      print_warning "Failed: $formula"
+    fi
+  done
+
+  # --- Casks ---
+  local casks=("${(@f)$(grep '^cask ' "$brewfile" | sed 's/^cask "\([^"]*\)".*/\1/')}")
+  total=${#casks[@]}
+  i=0
+
+  for cask in "${casks[@]}"; do
+    [[ -z "$cask" ]] && continue
+    ((i++))
+    print_step "[$i/$total] $cask"
+    if ! brew install --cask "$cask" >> "$log_file" 2>&1; then
+      failed+=("cask: $cask")
+      print_warning "Failed: $cask"
+    fi
+  done
+
+  # --- Summary ---
+  if [ ${#failed[@]} -gt 0 ]; then
+    echo ""
+    print_warning "Failed to install ${#failed[@]} package(s):"
+    for pkg in "${failed[@]}"; do
+      echo "  - $pkg"
+    done
+    echo "  Full log: $log_file"
+  fi
 
   print_success "Homebrew packages installed"
 }
@@ -107,22 +155,12 @@ install_brew_packages() {
 install_shell_symlinks() {
   print_step "Creating shell config symlinks..."
 
-  # Shell configs
+  # Shell configs (dry_ln handles backup of existing files automatically)
   for file in ".zshrc" ".vimrc"; do
-    if [ -f ~/$file.local ]; then
-      print_warning "$file.local exists, keeping backup"
-    elif [ -f ~/$file ] && [[ "$DRY_RUN" != "true" ]]; then
-      cp ~/$file ~/$file.local 2>/dev/null || true
-    fi
     dry_ln "$DOTFILES_DIR/shell/$file" ~/$file
   done
 
   # Git config
-  if [ -f ~/.gitconfig.local ]; then
-    print_warning ".gitconfig.local exists, keeping backup"
-  elif [ -f ~/.gitconfig ] && [[ "$DRY_RUN" != "true" ]]; then
-    cp ~/.gitconfig ~/.gitconfig.local 2>/dev/null || true
-  fi
   dry_ln "$DOTFILES_DIR/git/.gitconfig" ~/.gitconfig
 
   # .gitaliases — dry_ln handles backup automatically

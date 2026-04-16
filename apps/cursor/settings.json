@@ -117,5 +117,7 @@
   "diffEditor.maxComputationTime": 0,
   "atlascode.jira.jqlList": [],
   "gitlens.ai.model": "gitkraken",
-  "gitlens.ai.gitkraken.model": "gemini:gemini-2.0-flash"
+  "gitlens.ai.gitkraken.model": "gemini:gemini-2.0-flash",
+  "atlascode.rovodev.showEntitlementNotifications": false,
+  "vsicons.dontShowNewVersionMessage": true
 }
